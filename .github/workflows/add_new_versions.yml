@@ -26,12 +26,17 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Check if new versions available
+        id: check-versions
         run: |
           python auto-add-new-versions/check-for-new-versions.py
-          echo "PR_TITLE=${{ env.PR_TITLE }}" >> $GITHUB_ENV
-          echo "NEW_VERSIONS=${{ env.NEW_VERSIONS }}" >> $GITHUB_ENV
+          echo $PR_TITLE
+          echo $NEW_VERSIONS
+          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          echo "NEW_VERSIONS=$NEW_VERSIONS" >> $GITHUB_ENV
         env:
           EXCLUDED_VERSIONS: ${{ vars.EXCLUDED_VERSIONS }}
       
       - name: echo PR title
-        run: echo $PR_TITLE
+        run: |
+          echo ${{env.PR_TITLE}}
+          echo ${{env.NEW_VERSIONS}}
