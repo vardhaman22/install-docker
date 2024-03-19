@@ -4,7 +4,28 @@ import requests
 
 # Constants
 DIST_FOLDER = './dist'
-EXCLUDED_VERSIONS = 'v20.10.25,v20.10.26,v20.10.27,v23.0.7,v23.0.8,v23.0.9'
+EXCLUDED_VERSIONS = os.environ.get('EXCLUDED_VERSIONS', 'v20.10.x,v23.0.x')
+
+def get_excluded_version_patterns(excluded_ver_str):
+    excluded_ver_list = excluded_ver_str.split(',')
+    excluded_patterns = []
+    for ver in excluded_ver_list:
+        ver_parts = ver.split('.')
+        if len(ver_parts) == 3:
+            if ver_parts[1] == 'x':
+                excluded_patterns.append(ver_parts[0])
+            elif ver_parts[2] == 'x':
+                excluded_patterns.append(ver_parts[0] + '.'+ ver_parts[1])
+            else:
+                excluded_patterns.append(ver)
+    return excluded_patterns
+
+
+def is_excluded_version(excluded_patterns,version):
+    for pattern in excluded_patterns:
+        if version.startswith(pattern):
+            return True
+    return False
 
 def get_existing_versions(files_dir):
     existing_versions = set()
@@ -12,12 +33,6 @@ def get_existing_versions(files_dir):
         if file.endswith('.sh') and file.count('.') == 3:
             existing_versions.add('v' + file[:-3])
     return existing_versions
-
-def get_latest_major_minor_versions(existing_versions):
-    major_minor_versions = set()
-    for version in existing_versions:
-        major_minor_versions.add(version[1:-4])
-    return major_minor_versions
 
 def fetch_ten_latest_github_releases(owner, repo):
     url = f"https://api.github.com/repos/{owner}/{repo}/releases"
@@ -30,34 +45,26 @@ def fetch_ten_latest_github_releases(owner, repo):
         print(f"Failed to fetch releases: {e}")
         return None
 
-def generate_diffs(prev_version, current_version):
-    add_new_version_script_path = "./scripts/add-new-version"
-    env_vars = {"PREVIOUS_ADD_DOCKER_VERSION": prev_version, "ADD_DOCKER_VERSION": current_version} 
-    subprocess.run(["bash", add_new_version_script_path], check=True, env=env_vars)
-
 def main():
+    excluded_ver_patterns = get_excluded_version_patterns(EXCLUDED_VERSIONS)
     existing_versions = get_existing_versions(DIST_FOLDER)
-    major_minor_versions = get_latest_major_minor_versions(existing_versions)
     owner = "moby"
     repo = "moby"
     ten_latest_releases = fetch_ten_latest_github_releases(owner, repo)
     ten_latest_versions = [release['tag_name'] for release in ten_latest_releases]
-    excluded_versions = set(EXCLUDED_VERSIONS.split(","))
-    print(excluded_versions)
-    new_versions = set(ten_latest_versions) - existing_versions - excluded_versions
-    print(new_versions)
+    print("Ten latest versions: ",ten_latest_versions)
 
-    sorted_existing_versions = sorted(existing_versions)
-    for version in new_versions:
-        current_version = version[1:]
-        prev_version = max(filter(lambda x: tuple(map(int, x[1:].split('.'))) < tuple(map(int, version[1:].split('.'))), sorted_existing_versions))
-        prev_version = prev_version[1:]
-        generate_diffs(prev_version, current_version)
+    new_versions = set(ten_latest_versions) - existing_versions
+    new_versions = list(filter(lambda ver: not is_excluded_version(excluded_ver_patterns,ver),new_versions))
+    print('New versions: ',new_versions)
 
     versions_string = ",".join(new_versions)
     PR_TITLE = "Add docker " + versions_string
-    # subprocess.run(["bash", "./scripts/generate"], check=True)
+    print('PR Title: ', PR_TITLE)
+
     os.environ["PR_TITLE"] = PR_TITLE
+    os.environ["NEW_VERSIONS"] = versions_string
+
 
 
 if __name__ == "__main__":
