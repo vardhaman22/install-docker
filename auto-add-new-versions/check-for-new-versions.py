@@ -59,8 +59,11 @@ def main():
     print('New versions: ',new_versions)
 
     versions_string = ",".join(new_versions)
-    PR_TITLE = "Add docker " + versions_string
-    print('PR Title: ', PR_TITLE)
+    PR_TITLE = ""
+    
+    if versions_string != "":
+        PR_TITLE = "Add docker " + versions_string
+        print('PR Title: ', PR_TITLE)
 
     env_file = os.getenv('GITHUB_ENV')
 
