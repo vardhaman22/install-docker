@@ -12,16 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: '3.10'
+          cache: 'pip'
       - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+      - name: Pip
+        working-directory: ./auto-add-new-versions
+        run: pip install -r requirements.txt
 
       - name: Run Python script to generate files
         run: python auto-add-new-versions/auto-add-new-versions.py
+      
+      - name: echo PR title
+        run: echo $PR_TITLE
+      
+      - name: Add any new files to git
+        run: git add .
 
       - name: Check for repository changes
         run: |
@@ -40,8 +50,8 @@ jobs:
         run: |
           BRANCH="gha-add-tag-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
-          git config --global user.email "maans406@gmail.com"
-          git config --global user.name "vardhaman surana"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git checkout -b "$BRANCH"
           git commit -a -m "added new docker versions"
           git push origin "$BRANCH"

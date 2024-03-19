@@ -1,5 +1,6 @@
 import os
 import subprocess
+import requests
 
 # Constants
 DIST_FOLDER = './dist'
