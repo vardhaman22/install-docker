@@ -62,8 +62,14 @@ def main():
     PR_TITLE = "Add docker " + versions_string
     print('PR Title: ', PR_TITLE)
 
-    os.environ["PR_TITLE"] = PR_TITLE
-    os.environ["NEW_VERSIONS"] = versions_string
+    env_file = os.getenv('GITHUB_ENV')
+
+    if env_file:
+        with open(env_file, "a") as envfile:
+            envfile.write("PR_TITLE="+PR_TITLE)
+            envfile.write("NEW_VERSIONS="+versions_string)
+    else:
+        exit(1)
 
 
 

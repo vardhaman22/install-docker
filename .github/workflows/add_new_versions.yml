@@ -29,10 +29,6 @@ jobs:
         id: check-versions
         run: |
           python auto-add-new-versions/check-for-new-versions.py
-          echo $PR_TITLE
-          echo $NEW_VERSIONS
-          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
-          echo "NEW_VERSIONS=$NEW_VERSIONS" >> $GITHUB_ENV
         env:
           EXCLUDED_VERSIONS: ${{ vars.EXCLUDED_VERSIONS }}
       
