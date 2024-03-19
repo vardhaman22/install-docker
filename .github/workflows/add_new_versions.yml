@@ -39,6 +39,8 @@ jobs:
       
       - name: check if the PR exist
         if: ${{ env.PR_TITLE != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           EXISTING_PR=$(gh pr list --limit 1500 --json title,url | jq --arg title "${env.PR_TITLE}" -r '.[] | select(.title==$title) | .url')
           if [ -n "${EXISTING_PR}" ]; then

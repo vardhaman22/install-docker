@@ -69,8 +69,8 @@ def main():
 
     if env_file:
         with open(env_file, "a") as envfile:
-            envfile.write("PR_TITLE="+PR_TITLE)
-            envfile.write("NEW_VERSIONS="+versions_string)
+            envfile.write("PR_TITLE="+PR_TITLE+"\n")
+            envfile.write("NEW_VERSIONS="+versions_string+"\n")
     else:
         exit(1)
 
